@@ -12,12 +12,15 @@ x = int((w - 640) / 2)
 y = int((v - 640) / 2)
 x1 = x + 640
 y1 = y + 640
-print(x, y, x1, y1)
 
-save_path = "./dataset/img"
+save_path = "datasets/img"
+if not os.path.exists(save_path):
+    os.makedirs(save_path)
 
 
 def cut_display():
+    print(x, y, x1, y1)
+
     while True:
         img = d.screenshot(region=(x, y, x1, y1))
         img.save(os.path.join(save_path, str(time.time()) + ".jpg"))
