@@ -1,7 +1,7 @@
 import os.path
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import torch
-from ultralytics import YOLOv10
+from ultralytics10 import YOLOv10
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Using device: {device}')

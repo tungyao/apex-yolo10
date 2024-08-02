@@ -1,6 +1,18 @@
 import time
 import dxshot
 import cv2
+import time
+import os
+
+d = dxshot.create()
+res = [2560, 1440]
+w = res[0]
+v = res[1]
+x = int((w - 640) / 2)
+y = int((v - 640) / 2)
+x1 = x + 640
+y1 = y + 640
+save_path = "datasets/img"
 
 
 def benchmark():
@@ -30,7 +42,7 @@ def benchmark():
 
 def capture():
     target_fps = 60
-    camera = dxshot.create(output_idx=0, output_color="BGR")
+    camera = dxshot.create(output_idx=0, output_color="RGB")
     camera.start(target_fps=target_fps, video_mode=True)
     writer = cv2.VideoWriter(
         "video.mp4", cv2.VideoWriter_fourcc(*"mp4v"), target_fps, (1920, 1080)
@@ -41,5 +53,17 @@ def capture():
     writer.release()
 
 
+def cut_display():
+    print(x, y, x1, y1)
+    cam = dxshot.create(output_color="RGB")
+    region = (x, y, x1, y1)
+
+    while True:
+        frame = cam.grab(region=region)
+        cv2.imwrite(os.path.join(save_path, str(time.time()) + ".jpg"), frame)
+        print(str(time.time()) + ":  " + str(time.time()) + ".jpg" + "已保存")
+        time.sleep(1)  # 一秒截一张图
+
+
 if __name__ == "__main__":
-    capture()
+    cut_display()

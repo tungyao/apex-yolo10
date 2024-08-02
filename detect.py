@@ -1,27 +1,38 @@
 import torch
+from ultralytics.utils.ops import non_max_suppression
 
 from capture import LoadScreen
 from ultralytics.nn.autobackend import AutoBackend
 import time
 import cv2
 from math import atan2
+import os
+from mouse_driver.MouseMove import ghub_mouse_move
 # from mouse_driver.MouseMove import ghub_mouse_move
 from win32mouse.MouseMove import mouse_move
-
+from pynput.mouse import Listener, Button
 
 class YOLOv10Detect:
     def __init__(self):
         self.showFPS = 1
         self.size = 640
-        self.offset = torch.tensor([self.size / 2, self.size / 2], device='cpu')
+        self.offset = torch.tensor([self.size / 2, self.size / 2], device=0)
         self.mul = 0.4
         self.smooth = 0.42
         self.mouse_on_click = True
         self.showFPS = True
-        self.enemy_label = 1
+        self.enemy_label = 0
         self.should_stop = False  # flag to stop
         self.enable_mouse_lock = True
-
+    def is_click(self, x, y, button, pressed):
+        if self.enable_mouse_lock:
+            if button in [Button.left, Button.right]:
+                if pressed:
+                    self.mouse_on_click = True
+                    print("鼠标锁定已开启")
+                else:
+                    self.mouse_on_click = False
+                    print("鼠标锁定已关闭")
     def get_dis(self, vec):  # must not null
         return (((vec[0] + vec[2] - self.size) / 2) ** 2 + ((vec[1] + vec[3] - self.size) / 2) ** 2) ** (1 / 2)
 
@@ -29,16 +40,15 @@ class YOLOv10Detect:
         rel_target = [item * self.smooth for item in
                       [(target[0] + target[2] - self.size) / 2, (target[1] + target[3] - self.size) / 2]]
         move_rel_x, move_rel_y = [atan2(item, self.size) * self.size for item in rel_target]
-        mouse_move(move_rel_x, move_rel_y)
+        ghub_mouse_move(move_rel_x, move_rel_y)
 
     def run(self):
-        device = torch.device("cpu")
+        device = torch.device("cuda")
         imgsz = (640, 640)
         bs = 1
         dataset = LoadScreen()
-
-        from ultralytics.utils.ops import non_max_suppression
-        model = AutoBackend("./best.pt", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=False)
+        save_path = "datasets/img"
+        model = AutoBackend("./best.engine", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=False)
         stride, names, pt = model.stride, model.names, model.pt
         # Run inference
         model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *imgsz))  # warmup
@@ -58,32 +68,13 @@ class YOLOv10Detect:
             # Inference
 
             pred = model(im, augment=False, visualize=False)
-            # NMS
-            pred = non_max_suppression(pred["one2many"], 0.25, 0.45, None, False, max_det=300)
-
-            # Quit
-            # 绘制边界框
+            pred = non_max_suppression(pred, 0.3, 0.45, None, False, max_det=10)
 
             bound = pred[0].cpu().numpy()
-            # print(bound)
-            # for r in bound:
-            #     # 获取边界框坐标
-            #     x1, y1, x2, y2 = r.xyxy[0]
-            #     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
-            #
-            #     # 获取类别 ID 和置信度
-            #     cls_id = int(r.cls[0])
-            #     conf = r.conf[0]
-            #
-            #     # 绘制边界框
-            #     cv2.rectangle(im0, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            #
-            #     # 在图像上绘制类别名称和置信度
-            # cv2.imshow('YOLOv5 Detection', im0)
-
             # 显示图像
             if self.enable_mouse_lock and len(bound) > 0:
                 # chose target which is closest to center
+                cv2.imwrite(os.path.join(save_path, str(time.time()) + ".jpg"), im0)
                 target = bound[0]
                 min_dis = self.get_dis(target)
                 for vec in bound:
@@ -98,7 +89,6 @@ class YOLOv10Detect:
                         # only update target when it is enemy
                         target = vec
                         min_dis = now_dis
-
                 if self.enable_mouse_lock and self.mouse_on_click and target[5] == self.enemy_label:
                     # only lock target when label is enemy and mouse is clicked
                     # self.lock_target(target)
@@ -118,6 +108,7 @@ class YOLOv10Detect:
                     frame_cnt = 0
 
                 print("Fps is ", fps)
+
 
     def stop(self):
         self.should_stop = True

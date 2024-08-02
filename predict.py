@@ -1,4 +1,4 @@
-from ultralytics import YOLOv10
+from ultralytics10 import YOLOv10
 
 model = YOLOv10('./best.pt')
 # or
