@@ -1,0 +1,9 @@
+from detect import YOLOv10Detect
+import threading
+
+detector = YOLOv10Detect()
+
+
+if __name__ == "__main__":
+    detector_thread = threading.Thread(target=detector.run)
+    detector_thread.start()

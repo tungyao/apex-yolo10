@@ -1,0 +1,4 @@
+train: E:\code\apex-yolo10\datasets\images\train
+val: E:\code\apex-yolo10\datasets\images\val
+nc: 2
+names: ["enemy", "ally"]
