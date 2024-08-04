@@ -13,7 +13,7 @@ model = YOLOv10('./yolov10s.pt')
 
 results = model.train(
     data=os.path.abspath('./datasets/dataset.yaml'),  # 数据集配置文件路径
-    epochs=20,  # 训练轮数
+    epochs=100,  # 训练轮数
     imgsz=640,  # 图像大小
     batch=16,  # 批次大小
     name='apex_yolov10_experiment2',  # 实验名称
@@ -22,4 +22,4 @@ results = model.train(
 )
 
 # 保存训练好的模型
-model.save('apex_yolov10_model.pt')
+model.save('best.pt')
