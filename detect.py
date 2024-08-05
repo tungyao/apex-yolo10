@@ -1,3 +1,4 @@
+import cv2
 import pynput
 import torch
 from ultralytics.utils.ops import non_max_suppression
@@ -16,9 +17,9 @@ left_top_x = LEFT
 left_top_y = TOP
 right_bottom_x = LEFT + SIZE
 right_bottom_y = TOP + SIZE
-shot_Width = 640 * 2  # 截屏区域的实际大小需要乘以2，因为是计算的中心点
-shot_Height = 640 * 2
-
+shot_Width = 640   # 截屏区域的实际大小需要乘以2，因为是计算的中心点
+shot_Height = 640
+lock_mode  = 0
 
 
 
@@ -45,7 +46,7 @@ class YOLOv10Detect:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         bs = 1
         dataset = LoadScreen()
-        model = AutoBackend("./best.engine", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=True)
+        model = AutoBackend("./model.engine", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=True)
         stride, names, pt = model.stride, model.names, model.pt
         model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *self.imgsz))  # warmup
         frame_cnt = 0
@@ -59,7 +60,7 @@ class YOLOv10Detect:
                 im = im[None]  # expand for batch dim
             pred = model(im, augment=False, visualize=False)
             # TODO 调节这里的参数 pt和engine模型输出pred不一样
-            pred = non_max_suppression(pred, 0.4, 0.8, 0, False, max_det=10)
+            pred = non_max_suppression(pred, 0.5, 0.1, 0, False, max_det=10)
             aims = []
             for i, det in enumerate(pred):
                 gn = torch.tensor(img0.shape)[[1, 0, 1, 0]]

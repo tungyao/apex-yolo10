@@ -8,8 +8,9 @@ from mouse_driver.MouseMove import ghub_mouse_move
 from mouse_driver.ghub_mouse import mouse_xy
 from win32mouse.MouseMove import mouse_move_win32
 
-pidx = PID(1.2, 3.51, 0.0, setpoint=0, sample_time=0.001,)
-pidy = PID(1.22, 0.12, 0.0, setpoint=0, sample_time=0.001,)
+pidx = PID(Kp=0.5, Ki=0.1, Kd=0.2)
+pidy = PID(Kp=0.1, Ki=0.01, Kd=0.1)
+
 
 
 lock_tag = '0'
@@ -28,7 +29,7 @@ pid_exit_flag = False
 
 def pid_control():
     print('PID thread started')
-    Kp, Ki, Kd = 0.3, 0.1, 0.1
+    Kp, Ki, Kd = 0.8, 0.1, 0.08
     integral_x = 0
     integral_y = 0
     prev_error_x = 0
@@ -55,8 +56,8 @@ def pid_control():
             output_x = Kp * error_X + Ki * integral_x + Kd * derivative_x
             output_y = Kp * error_Y + Ki * integral_y + Kd * derivative_y
             print(f"鼠标移动 x:{output_x} y:{output_y}")
-            mouse_move_win32(int(output_x), int(output_y))
-            # ghub_mouse_move(int(output_x), int(output_y))
+            # mouse_move_win32(int(output_x), int(output_y))
+            ghub_mouse_move(int(output_x), int(output_y))
             # mouse_xy(int(output_x), int(output_y))
         else:
             integral_x = 0
