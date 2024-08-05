@@ -1,6 +1,5 @@
 import pynput
 
-from args_ import arg_init
 from detect import YOLOv10Detect
 import threading
 

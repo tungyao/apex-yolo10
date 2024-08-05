@@ -1,13 +1,10 @@
 import os.path
-os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import torch
-from ultralytics import YOLO
+from ultralytics10 import YOLOv10
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Using device: {device}')
-# torch.cuda.set_device(0)
-# 加载预训练模型（例如YOLOv8n）
-# model = YOLOv10('./best.pt')
-# model.export(format="engine")
-tensorrt_model = YOLO("best.engine",task="detect")
-results = tensorrt_model("E:\code\\apex-yolo10\datasets\images\\val\\2d7cf30e47743c7a8bfc7720533704fa.png")
-print(results)
+model = YOLOv10('./best.pt')
+model.export(format="onnx", opset=13, max_det=100, conf=0.25, iou=0.65, nms=True, simplify=True)

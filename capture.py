@@ -13,7 +13,7 @@ class LoadScreen:
     def __init__(self, region: tuple[int, int, int, int] = REGION):
         self.region = region
         self.camera = dxshot.create(region=self.region, output_color="RGB")
-        self.camera.start(target_fps=200, video_mode=False)
+        self.camera.start(target_fps=30, video_mode=False)
         self.screen, left, top, width, height = 0, None, None, None, None  # default to full screen 0
         self.top = TOP
         self.left = LEFT

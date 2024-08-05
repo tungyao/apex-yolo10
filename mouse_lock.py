@@ -6,6 +6,7 @@ import threading
 
 from mouse_driver.MouseMove import ghub_mouse_move
 from mouse_driver.ghub_mouse import mouse_xy
+from win32mouse.MouseMove import mouse_move_win32
 
 pidx = PID(Kp=0.5, Ki=0.1, Kd=0.2)
 pidy = PID(Kp=0.1, Ki=0.01, Kd=0.1)
@@ -54,7 +55,8 @@ def pid_control():
             output_x = Kp * error_X + Ki * integral_x + Kd * derivative_x
             output_y = Kp * error_Y + Ki * integral_y + Kd * derivative_y
             print(f"鼠标移动 x:{output_x} y:{output_y}")
-            ghub_mouse_move(int(output_x), int(output_y))
+            mouse_move_win32(int(output_x), int(output_y))
+            # ghub_mouse_move(int(output_x), int(output_y))
             # mouse_xy(int(output_x), int(output_y))
         else:
             integral_x = 0
@@ -86,6 +88,7 @@ class MouseLock:
         targetRealX = left_top_x + targetShotX  #目标在屏幕的坐标
         targetRealY = left_top_y + targetShotY
         return targetRealX, targetRealY
+
     def lock(self, aims):
         global targetRealX, targetRealY, current_mouse_x, current_mouse_y
         current_mouse_x,current_mouse_y = self.mouse.position # update mouse position

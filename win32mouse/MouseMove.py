@@ -8,8 +8,8 @@ MOUSE_EVEN_TF_RIGHT_UP = 0x10
 MOUSE_EVEN_TF_MOVE = 0x1
 
 user32 = windll.user32
-def mouse_move(x,y):
+def mouse_move_win32(x,y):
     user32.mouse_event(MOUSE_EVEN_TF_MOVE, int(x), int(y))
 
 if __name__== "__main__":
-    mouse_move(100,100)
+    mouse_move_win32(100,100)
