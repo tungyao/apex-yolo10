@@ -45,7 +45,7 @@ class YOLOv10Detect:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         bs = 1
         dataset = LoadScreen()
-        model = AutoBackend("./best.engine", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=False)
+        model = AutoBackend("./best.engine", device=device, dnn=False, data="./datasets/dataset.yaml", fp16=True)
         stride, names, pt = model.stride, model.names, model.pt
         model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *self.imgsz))  # warmup
         frame_cnt = 0
