@@ -1,3 +1,5 @@
+import os
+
 import cv2
 import pynput
 import torch
@@ -52,8 +54,7 @@ class YOLOv10Detect:
         model.warmup(imgsz=(1 if pt or model.triton else bs, 3, *self.imgsz))  # warmup
         frame_cnt = 0
         that_time = 0
-        bboxes = []
-        averager = (0, 0, 0, 0)
+        save_path = "datasets/img"
         # cv2.namedWindow('YOLOv10 Detection', cv2.WINDOW_NORMAL)
         for path, im, img0, vid_cap, s in dataset:
             im = torch.from_numpy(im).to(model.device)
@@ -81,8 +82,12 @@ class YOLOv10Detect:
                             aims.append(aim)
 
             if len(aims):
+                now_time = time.time()
+                if now_time - that_time > 3:
+                    cv2.imwrite(os.path.join(save_path, str(time.time()) + ".jpg"), im)
                 mouselock.set_lock_state(lock_mode)
                 mouselock.lock(aims)
+                that_time = now_time
                 # 屏幕显示拉框
                 # for i, det in enumerate(aims):
                 #     tag, x_center, y_center, width, height = det
