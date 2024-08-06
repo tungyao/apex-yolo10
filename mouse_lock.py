@@ -1,6 +1,5 @@
-
 from simple_pid import PID
-import pynput,win32con
+import pynput, win32con
 import time
 import threading
 
@@ -8,10 +7,8 @@ from mouse_driver.MouseMove import ghub_mouse_move
 from mouse_driver.ghub_mouse import mouse_xy
 from win32mouse.MouseMove import mouse_move_win32
 
-pidx = PID(Kp=0.5, Ki=0.1, Kd=0.2)
+pidx = PID(Kp=0.2, Ki=0.03, Kd=0.2)
 pidy = PID(Kp=0.1, Ki=0.01, Kd=0.1)
-
-
 
 lock_tag = '0'
 
@@ -26,10 +23,9 @@ dist = False
 pid_exit_flag = False
 
 
-
 def pid_control():
     print('PID thread started')
-    Kp, Ki, Kd = 0.8, 0.1, 0.08
+    Kp, Ki, Kd = 0.8, 0.1, 0.02
     integral_x = 0
     integral_y = 0
     prev_error_x = 0
@@ -55,7 +51,7 @@ def pid_control():
             prev_error_y = error_Y
             output_x = Kp * error_X + Ki * integral_x + Kd * derivative_x
             output_y = Kp * error_Y + Ki * integral_y + Kd * derivative_y
-            print(f"鼠标移动 x:{output_x} y:{output_y}")
+            # print(f"鼠标移动 x:{output_x} y:{output_y}")
             # mouse_move_win32(int(output_x), int(output_y))
             ghub_mouse_move(int(output_x), int(output_y))
             # mouse_xy(int(output_x), int(output_y))
@@ -71,52 +67,57 @@ def pid_control():
 class MouseLock:
     def __init__(self, shot_Width, shot_Height) -> None:
         global current_mouse_x, current_mouse_y, dist, targetRealX, targetRealY
-        self.screen_width, self.screen_height = (1920,1080) # Screen resolution
-        self.target_offset_y = -0.1 # target offset
-        dist = False # distance small enough
-        self.mouse = pynput.mouse.Controller() # mouse controller
-        targetRealX, targetRealY = self.screen_width//2, self.screen_height//2
-        current_mouse_x, current_mouse_y = self.screen_width//2, self.screen_height//2
+        self.screen_width, self.screen_height = (2560, 1440)  # Screen resolution
+        self.target_offset_y = -0.1  # target offset
+        dist = False  # distance small enough
+        self.mouse = pynput.mouse.Controller()  # mouse controller
+        targetRealX, targetRealY = self.screen_width // 2, self.screen_height // 2
+        current_mouse_x, current_mouse_y = self.screen_width // 2, self.screen_height // 2
         self.shot_Width, self.shot_Height = shot_Width, shot_Height
         pid_thread = threading.Thread(target=pid_control)
         pid_thread.start()
+
     def xcyc2xyxy(self, xc, yc):
-        targetShotX = self.shot_Width / 2 * float(xc)  #目标在截图范围内的坐标
+        targetShotX = self.shot_Width / 2 * float(xc)  # 目标在截图范围内的坐标
         targetShotY = self.shot_Height / 2 * float(yc)
-        screenCenterX = self.screen_width//2
-        screenCenterY = self.screen_height//2
-        left_top_x , left_top_y = screenCenterX - self.shot_Width / 2 //2, screenCenterY - self.shot_Height / 2 //2  #截图框的左上角坐标
-        targetRealX = left_top_x + targetShotX  #目标在屏幕的坐标
+        screenCenterX = self.screen_width // 2
+        screenCenterY = self.screen_height // 2
+        left_top_x, left_top_y = screenCenterX - self.shot_Width / 2 // 2, screenCenterY - self.shot_Height / 2 // 2  # 截图框的左上角坐标
+        targetRealX = left_top_x + targetShotX  # 目标在屏幕的坐标
         targetRealY = left_top_y + targetShotY
         return targetRealX, targetRealY
 
     def lock(self, aims):
         global targetRealX, targetRealY, current_mouse_x, current_mouse_y
-        current_mouse_x,current_mouse_y = self.mouse.position # update mouse position
+        current_mouse_x, current_mouse_y = self.mouse.position  # update mouse position
         aims_copy = aims.copy()
         aims_copy = [x for x in aims_copy if x[0] == lock_tag]
-        if(len(aims_copy) ==0):
+        if (len(aims_copy) == 0):
             return
         dist_list = []
         for det in aims_copy:
-            _, x_c, y_c, _, _ = det # tag, x_center, y_center, width, height
+            _, x_c, y_c, _, _ = det  # tag, x_center, y_center, width, height
             x, y = self.xcyc2xyxy(x_c, y_c)
-            dist = (x - current_mouse_x) ** 2 + (y - current_mouse_y) ** 2
+            dist = (x - current_mouse_x) ** 100 + (y - current_mouse_y) ** 100
             dist_list.append(dist)
-        det = aims_copy[dist_list.index(min(dist_list))] # get the nearest target
-        tag,target_x,target_y,target_width,target_height=det
+        det = aims_copy[dist_list.index(min(dist_list))]  # get the nearest target
+        tag, target_x, target_y, target_width, target_height = det
         targetRealX, targetRealY = self.xcyc2xyxy(target_x, target_y)
-        targetRealY += int(self.target_offset_y*self.shot_Height / 2 * float(target_height))
-        dist = (targetRealX - current_mouse_x)**2 + (targetRealY - current_mouse_y)**2
+        targetRealY += int(self.target_offset_y * self.shot_Height / 2 * float(target_height))
+        dist = (targetRealX - current_mouse_x) ** 2 + (targetRealY - current_mouse_y) ** 2
         if dist < 20000:
             self.dist = True
         else:
             self.dist = False
+
     def set_lock_state(self, state):
         global lock_state
         with lock:
             lock_state = state
+
     def set_exit_flag(self, flag):
         global pid_exit_flag
         with lock:
             pid_exit_flag = flag
+
+
